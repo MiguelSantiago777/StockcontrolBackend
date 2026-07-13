@@ -7,4 +7,5 @@ public static class CacheKeys
     public const string Dashboard = "dashboard:resumo";
     public const string Categorias = "categorias:lista";
     public const string Fornecedores = "fornecedores:lista";
+    public const string Clientes = "clientes:lista";
 }

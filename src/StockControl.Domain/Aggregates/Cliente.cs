@@ -30,9 +30,17 @@ public sealed class Cliente : AggregateRoot
         return new Cliente(nome.Trim(), cpf, email, telefone, endereco);
     }
 
-    public void AtualizarEndereco(Endereco endereco)
+    public Result Atualizar(string? nome, Cpf cpf, Email email, Telefone telefone, Endereco endereco)
     {
+        if (string.IsNullOrWhiteSpace(nome))
+            return Result.Failure(Error.Validation("Cliente.Nome", "O nome é obrigatório."));
+
+        Nome = nome.Trim();
+        Cpf = cpf;
+        Email = email;
+        Telefone = telefone;
         Endereco = endereco;
         MarkAsUpdated();
+        return Result.Success();
     }
 }
