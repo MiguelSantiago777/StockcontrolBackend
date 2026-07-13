@@ -127,7 +127,7 @@ Hub em `/hubs/stock` com grupos:
 - `entregadores` — pensado para posição em tempo real dos entregadores
 - `movimentacoes` — movimentações de estoque
 
-Os grupos existem e o cliente já entra neles, mas nenhum handler publica eventos ainda (ver "Próximos passos"). O rastreamento de entregadores hoje é só a última posição gravada via `PATCH /drivers/{id}/position`, não um push ao vivo.
+O rastreamento de entregadores hoje é a última posição gravada via `PATCH /drivers/{id}/position`, não um push ao vivo.
 
 ## Convenções
 
@@ -135,11 +135,3 @@ Os grupos existem e o cliente já entra neles, mas nenhum handler publica evento
 - Soft delete com filtro global de query.
 - Nenhum atributo de mapeamento — apenas `IEntityTypeConfiguration`.
 - Erros de negócio via Result Pattern; exceções apenas para casos excepcionais.
-
-## Próximos passos sugeridos
-
-- [ ] Publicar nos grupos do SignalR (`dashboard`, `entregadores`, `movimentacoes`) a partir dos handlers — os grupos e o hub já existem e o front já escuta os eventos, mas hoje nada é de fato publicado além do que já havia (a maioria dos domain events levantados, ex. `PedidoCriadoEvent`, `EntregaIniciadaEvent`, não tem handler; só `ProdutoSemEstoqueEvent` tem)
-- [ ] Tela de Configurações no frontend (`/settings` ainda é placeholder)
-- [ ] Cobertura de testes para os módulos novos (Categoria/Fornecedor/Cliente/Usuario/Movimentacao/Entregador/Pedido) — hoje só `Produto` e os Value Objects têm teste de domínio
-- [ ] Testes de integração com Testcontainers para os novos endpoints
-- [ ] Dashboard queries com cache Redis mais abrangente (hoje só listagens paginadas usam cache)
