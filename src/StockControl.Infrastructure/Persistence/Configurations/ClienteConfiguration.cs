@@ -20,7 +20,7 @@ public sealed class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
             .HasMaxLength(11)
             .IsRequired();
 
-        builder.HasIndex(c => c.Cpf).IsUnique();
+        builder.HasIndex(c => c.Cpf).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(c => c.Email)
             .HasConversion(email => email.Value, value => Email.Create(value).Value)

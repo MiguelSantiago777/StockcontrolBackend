@@ -19,7 +19,7 @@ public sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .HasMaxLength(320)
             .IsRequired();
 
-        builder.HasIndex(u => u.Email).IsUnique();
+        builder.HasIndex(u => u.Email).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(u => u.Senha)
             .HasConversion(s => s.Value, v => SenhaHash.Create(v).Value)

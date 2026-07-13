@@ -12,7 +12,7 @@ public sealed class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Nome).HasMaxLength(100).IsRequired();
-        builder.HasIndex(c => c.Nome).IsUnique();
+        builder.HasIndex(c => c.Nome).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
         builder.Property(c => c.Descricao).HasMaxLength(500);
 
         builder.Property(c => c.Version).IsRowVersion();

@@ -21,7 +21,7 @@ public sealed class FornecedorConfiguration : IEntityTypeConfiguration<Fornecedo
             .HasMaxLength(14)
             .IsRequired();
 
-        builder.HasIndex(f => f.Cnpj).IsUnique();
+        builder.HasIndex(f => f.Cnpj).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(f => f.Email)
             .HasConversion(email => email.Value, value => Email.Create(value).Value)

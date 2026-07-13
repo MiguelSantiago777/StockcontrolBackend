@@ -21,7 +21,7 @@ public sealed class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
             .HasMaxLength(30)
             .IsRequired();
 
-        builder.HasIndex(p => p.Codigo).IsUnique();
+        builder.HasIndex(p => p.Codigo).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(p => p.CodigoBarras)
             .HasConversion(c => c!.Value, v => CodigoBarras.Create(v).Value)

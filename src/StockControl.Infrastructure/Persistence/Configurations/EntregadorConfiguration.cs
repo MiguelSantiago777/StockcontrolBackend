@@ -20,7 +20,7 @@ public sealed class EntregadorConfiguration : IEntityTypeConfiguration<Entregado
             .HasMaxLength(11)
             .IsRequired();
 
-        builder.HasIndex(e => e.Cpf).IsUnique();
+        builder.HasIndex(e => e.Cpf).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
         builder.OwnsOne(e => e.Telefone, telefone =>
         {
