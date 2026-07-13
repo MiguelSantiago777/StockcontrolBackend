@@ -34,7 +34,7 @@ Sistema de controle de estoque com entregas em tempo real, construído em **.NET
         Dependências apontam sempre para dentro
 ```
 
-- **Domain**: zero dependências externas. Aggregate Roots (`Produto`, `Pedido`, `Usuario`, `Cliente`, `Fornecedor`, `Entregador`, `Movimentacao`), Value Objects, Domain Events, Specifications e Result Pattern.
+- **Domain**: zero dependências externas. Aggregate Roots (`Produto`, `Categoria`, `Pedido`, `Usuario`, `Cliente`, `Fornecedor`, `Entregador`, `Movimentacao`), Value Objects, Domain Events, Specifications e Result Pattern.
 - **Application**: CQRS com MediatR, pipeline behaviors (validação + logging), interfaces de serviços.
 - **Infrastructure**: implementações de repositórios (Repository + Unit of Work), `IEntityTypeConfiguration` para todo mapeamento, Redis, JWT, BCrypt, SignalR.
 - **API**: controllers finos que só delegam para o MediatR, tratamento global de exceções, Swagger com suporte a Bearer token.
@@ -94,6 +94,24 @@ POST /api/produtos
   ← Result<ProdutoDto> → 201 Created (ou ProblemDetails)
 ```
 
+## Endpoints (`/api/v1`)
+
+Todos os controllers seguem o mesmo formato: `GET` (paginado, `page`/`pageSize`/`search`), `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}` (soft delete), exceto onde indicado.
+
+| Recurso | Rota | Policy | Observação |
+|---|---|---|---|
+| Auth | `/auth/*` | — | login, refresh, logout, me, change-password |
+| Categorias | `/categories` | Leitura / GerenciaEstoque | |
+| Produtos | `/products` | Leitura / GerenciaEstoque | + `POST /products/{id}/image` |
+| Fornecedores | `/suppliers` | Leitura / GerenciaEstoque | CNPJ único, endereço obrigatório |
+| Clientes | `/customers` | Leitura / GerenciaEstoque | CPF único, endereço obrigatório |
+| Usuários | `/users` | Administrador | senha só no `POST`; `PUT` não altera senha |
+| Movimentações | `/movements` | Leitura / GerenciaEstoque | sem `PUT`/`DELETE`; `GET /movements/export` (CSV) |
+| Entregadores | `/drivers` | Leitura / GerenciaEstoque | `PATCH /{id}/status`, `PATCH /{id}/position`, `GET /drivers/eligible-users` |
+| Pedidos | `/orders` | Leitura / GerenciaEstoque / Entregas | sem `PUT`; `PATCH /{id}/start-delivery`, `/finish-delivery`, `/cancel` |
+
+Todos os índices únicos (CNPJ, CPF, e-mail, código de produto) são filtrados por `DeletedAt IS NULL`, então um valor de um registro excluído pode ser reutilizado livremente.
+
 ## Autenticação
 
 1. `POST /api/auth/login` → retorna `accessToken` (15 min) + `refreshToken` (7 dias)
@@ -106,8 +124,10 @@ Perfis: **Administrador**, **Estoquista**, **Entregador**, **Visualizador** (pol
 
 Hub em `/hubs/stock` com grupos:
 - `dashboard` — atualizações do dashboard
-- `entregadores` — posição em tempo real dos entregadores
+- `entregadores` — pensado para posição em tempo real dos entregadores
 - `movimentacoes` — movimentações de estoque
+
+Os grupos existem e o cliente já entra neles, mas nenhum handler publica eventos ainda (ver "Próximos passos"). O rastreamento de entregadores hoje é só a última posição gravada via `PATCH /drivers/{id}/position`, não um push ao vivo.
 
 ## Convenções
 
@@ -118,8 +138,8 @@ Hub em `/hubs/stock` com grupos:
 
 ## Próximos passos sugeridos
 
-- [ ] Módulo de autenticação completo (Login/Refresh/Logout commands)
-- [ ] Handlers de Domain Events (ex.: notificar SignalR quando `ProdutoSemEstoqueEvent`)
-- [ ] Migrations iniciais
-- [ ] Dashboard queries com cache Redis
-- [ ] Testes de integração com Testcontainers
+- [ ] Publicar nos grupos do SignalR (`dashboard`, `entregadores`, `movimentacoes`) a partir dos handlers — os grupos e o hub já existem e o front já escuta os eventos, mas hoje nada é de fato publicado além do que já havia (a maioria dos domain events levantados, ex. `PedidoCriadoEvent`, `EntregaIniciadaEvent`, não tem handler; só `ProdutoSemEstoqueEvent` tem)
+- [ ] Tela de Configurações no frontend (`/settings` ainda é placeholder)
+- [ ] Cobertura de testes para os módulos novos (Categoria/Fornecedor/Cliente/Usuario/Movimentacao/Entregador/Pedido) — hoje só `Produto` e os Value Objects têm teste de domínio
+- [ ] Testes de integração com Testcontainers para os novos endpoints
+- [ ] Dashboard queries com cache Redis mais abrangente (hoje só listagens paginadas usam cache)
