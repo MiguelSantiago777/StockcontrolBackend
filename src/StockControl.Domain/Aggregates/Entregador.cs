@@ -33,6 +33,17 @@ public sealed class Entregador : AggregateRoot
         return new Entregador(nome.Trim(), cpf, telefone, usuarioId);
     }
 
+    public Result Atualizar(string? nome, Telefone telefone)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+            return Result.Failure(Error.Validation("Entregador.Nome", "O nome é obrigatório."));
+
+        Nome = nome.Trim();
+        Telefone = telefone;
+        MarkAsUpdated();
+        return Result.Success();
+    }
+
     public Result AtualizarPosicao(double latitude, double longitude)
     {
         var coordenada = CoordenadaGeografica.Create(latitude, longitude);
