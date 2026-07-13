@@ -33,4 +33,20 @@ public sealed class Fornecedor : AggregateRoot
 
         return new Fornecedor(razaoSocial.Trim(), nomeFantasia?.Trim(), cnpj, email, telefone, endereco);
     }
+
+    public Result Atualizar(string? razaoSocial, string? nomeFantasia,
+        Cnpj cnpj, Email email, Telefone telefone, Endereco endereco)
+    {
+        if (string.IsNullOrWhiteSpace(razaoSocial))
+            return Result.Failure(Error.Validation("Fornecedor.RazaoSocial", "A razão social é obrigatória."));
+
+        RazaoSocial = razaoSocial.Trim();
+        NomeFantasia = nomeFantasia?.Trim();
+        Cnpj = cnpj;
+        Email = email;
+        Telefone = telefone;
+        Endereco = endereco;
+        MarkAsUpdated();
+        return Result.Success();
+    }
 }
