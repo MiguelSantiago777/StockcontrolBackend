@@ -18,9 +18,9 @@ public sealed class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
         return await DbSet.FirstOrDefaultAsync(usuario => usuario.Email == email, cancellationToken);
     }
 
-    public async Task<bool> EmailExisteAsync(Email email, CancellationToken cancellationToken = default)
+    public async Task<bool> EmailExisteAsync(Email email, Guid? ignorarId = null, CancellationToken cancellationToken = default)
     {
-        return await DbSet.AnyAsync(usuario => usuario.Email == email, cancellationToken);
+        return await DbSet.AnyAsync(usuario => usuario.Email == email && usuario.Id != ignorarId, cancellationToken);
     }
 
     public async Task<Usuario?> ObterPorRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)

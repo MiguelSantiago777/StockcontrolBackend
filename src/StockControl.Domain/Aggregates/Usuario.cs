@@ -34,6 +34,18 @@ public sealed class Usuario : AggregateRoot
         return usuario;
     }
 
+    public Result Atualizar(string? nome, Email email, PerfilUsuario perfil)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+            return Result.Failure(Error.Validation("Usuario.Nome", "O nome é obrigatório."));
+
+        Nome = nome.Trim();
+        Email = email;
+        Perfil = perfil;
+        MarkAsUpdated();
+        return Result.Success();
+    }
+
     public void AlterarSenha(SenhaHash novaSenha)
     {
         Senha = novaSenha;
