@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StockControl.Domain.Aggregates;
+using StockControl.Domain.Enums;
 using StockControl.Domain.Repositories;
 using StockControl.Infrastructure.Persistence.Context;
 
@@ -37,5 +38,17 @@ public sealed class PedidoRepository : Repository<Pedido>, IPedidoRepository
             .AsNoTracking()
             .Include(pedido => pedido.Itens)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExisteEmEntregaParaEntregadorAsync(
+        Guid entregadorId, Guid pedidoIgnoradoId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .AnyAsync(pedido =>
+                pedido.Id != pedidoIgnoradoId &&
+                pedido.EntregadorId == entregadorId &&
+                pedido.Status == StatusPedido.EmEntrega,
+                cancellationToken);
     }
 }

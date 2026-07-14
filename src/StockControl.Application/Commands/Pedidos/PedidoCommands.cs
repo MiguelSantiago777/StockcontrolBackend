@@ -296,7 +296,12 @@ public sealed class FinalizarEntregaPedidoCommandHandler : IRequestHandler<Final
         if (pedido.EntregadorId is { } entregadorId)
         {
             entregador = await _entregadorRepository.GetByIdAsync(entregadorId, cancellationToken);
-            entregador?.FicarDisponivel();
+            var temOutraEntregaEmAndamento = await _pedidoRepository.ExisteEmEntregaParaEntregadorAsync(
+                entregadorId, pedido.Id, cancellationToken);
+            if (!temOutraEntregaEmAndamento)
+            {
+                entregador?.FicarDisponivel();
+            }
             if (entregador is not null) _entregadorRepository.Update(entregador);
         }
 
