@@ -11,4 +11,5 @@ public static class CacheKeys
     public const string Usuarios = "usuarios:lista";
     public const string Entregadores = "entregadores:lista";
     public const string Pedidos = "pedidos:lista";
+    public const string Veiculos = "veiculos:lista";
 }

@@ -30,11 +30,13 @@ public sealed class ListarEntregadoresQuery : IRequest<Result<PagedResultDto<Ent
 public sealed class ListarEntregadoresQueryHandler : IRequestHandler<ListarEntregadoresQuery, Result<PagedResultDto<EntregadorDto>>>
 {
     private readonly IRepository<Entregador> _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
     private readonly ICacheService _cache;
 
-    public ListarEntregadoresQueryHandler(IRepository<Entregador> repository, ICacheService cache)
+    public ListarEntregadoresQueryHandler(IRepository<Entregador> repository, IRepository<Veiculo> veiculoRepository, ICacheService cache)
     {
         _repository = repository;
+        _veiculoRepository = veiculoRepository;
         _cache = cache;
     }
 
@@ -57,9 +59,13 @@ public sealed class ListarEntregadoresQueryHandler : IRequestHandler<ListarEntre
         var entregadores = await _repository.ListAsync(spec, cancellationToken);
         var totalCount = await _repository.CountAsync(spec, cancellationToken);
 
+        var veiculos = (await _veiculoRepository.ListAsync(cancellationToken)).ToDictionary(v => v.Id);
+
         var resultado = new PagedResultDto<EntregadorDto>
         {
-            Items = entregadores.Select(e => e.ToDto()).ToList(),
+            Items = entregadores
+                .Select(e => e.ToDto(e.VeiculoAtualId is { } id && veiculos.TryGetValue(id, out var v) ? v : null))
+                .ToList(),
             Page = request.Page,
             PageSize = request.PageSize,
             TotalCount = totalCount,
@@ -87,10 +93,12 @@ public sealed class ObterEntregadorPorIdQuery : IRequest<Result<EntregadorDto>>
 public sealed class ObterEntregadorPorIdQueryHandler : IRequestHandler<ObterEntregadorPorIdQuery, Result<EntregadorDto>>
 {
     private readonly IRepository<Entregador> _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
 
-    public ObterEntregadorPorIdQueryHandler(IRepository<Entregador> repository)
+    public ObterEntregadorPorIdQueryHandler(IRepository<Entregador> repository, IRepository<Veiculo> veiculoRepository)
     {
         _repository = repository;
+        _veiculoRepository = veiculoRepository;
     }
 
     public async Task<Result<EntregadorDto>> Handle(ObterEntregadorPorIdQuery request, CancellationToken cancellationToken)
@@ -101,7 +109,10 @@ public sealed class ObterEntregadorPorIdQueryHandler : IRequestHandler<ObterEntr
             return Result.Failure<EntregadorDto>(Error.NotFound("Entregador.NaoEncontrado", "Entregador não encontrado."));
         }
 
-        return entregador.ToDto();
+        var veiculoAtual = entregador.VeiculoAtualId is { } veiculoId
+            ? await _veiculoRepository.GetByIdAsync(veiculoId, cancellationToken)
+            : null;
+        return entregador.ToDto(veiculoAtual);
     }
 }
 

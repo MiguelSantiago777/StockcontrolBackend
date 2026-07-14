@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<IFornecedorRepository, FornecedorRepository>();
         services.AddScoped<IEntregadorRepository, EntregadorRepository>();
+        services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
         // Cache (Redis)
         services.AddStackExchangeRedisCache(options =>

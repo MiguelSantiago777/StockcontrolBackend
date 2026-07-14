@@ -24,6 +24,7 @@ public sealed class Entregador : AggregateRoot
     public StatusEntregador Status { get; private set; }
     public CoordenadaGeografica? UltimaPosicao { get; private set; }
     public DateTime? PosicaoAtualizadaEm { get; private set; }
+    public Guid? VeiculoAtualId { get; private set; }
 
     public static Result<Entregador> Criar(string? nome, Cpf cpf, Telefone telefone, Guid usuarioId)
     {
@@ -54,6 +55,8 @@ public sealed class Entregador : AggregateRoot
         MarkAsUpdated();
         return Result.Success();
     }
+
+    public void AtribuirVeiculo(Guid veiculoId) { VeiculoAtualId = veiculoId; MarkAsUpdated(); }
 
     public void IniciarEntrega() { Status = StatusEntregador.EmEntrega; MarkAsUpdated(); }
     public void FicarDisponivel() { Status = StatusEntregador.Disponivel; MarkAsUpdated(); }

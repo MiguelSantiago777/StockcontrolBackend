@@ -154,6 +154,9 @@ public sealed class IniciarEntregaPedidoCommand : IRequest<Result<PedidoDto>>
 
     [JsonPropertyName("driverId")]
     public Guid DriverId { get; set; }
+
+    [JsonPropertyName("vehicleId")]
+    public Guid VehicleId { get; set; }
 }
 
 public sealed class IniciarEntregaPedidoCommandValidator : AbstractValidator<IniciarEntregaPedidoCommand>
@@ -162,6 +165,7 @@ public sealed class IniciarEntregaPedidoCommandValidator : AbstractValidator<Ini
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.DriverId).NotEmpty().WithMessage("O entregador é obrigatório.");
+        RuleFor(x => x.VehicleId).NotEmpty().WithMessage("O veículo é obrigatório.");
     }
 }
 
@@ -170,6 +174,7 @@ public sealed class IniciarEntregaPedidoCommandHandler : IRequestHandler<Iniciar
     private readonly IPedidoRepository _pedidoRepository;
     private readonly IRepository<Cliente> _clienteRepository;
     private readonly IEntregadorRepository _entregadorRepository;
+    private readonly IVeiculoRepository _veiculoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
 
@@ -177,12 +182,14 @@ public sealed class IniciarEntregaPedidoCommandHandler : IRequestHandler<Iniciar
         IPedidoRepository pedidoRepository,
         IRepository<Cliente> clienteRepository,
         IEntregadorRepository entregadorRepository,
+        IVeiculoRepository veiculoRepository,
         IUnitOfWork unitOfWork,
         ICacheService cache)
     {
         _pedidoRepository = pedidoRepository;
         _clienteRepository = clienteRepository;
         _entregadorRepository = entregadorRepository;
+        _veiculoRepository = veiculoRepository;
         _unitOfWork = unitOfWork;
         _cache = cache;
     }
@@ -207,12 +214,26 @@ public sealed class IniciarEntregaPedidoCommandHandler : IRequestHandler<Iniciar
                 Error.Conflict("Entregador.Indisponivel", "O entregador selecionado está indisponível."));
         }
 
+        var veiculo = await _veiculoRepository.GetByIdAsync(request.VehicleId, cancellationToken);
+        if (veiculo is null)
+        {
+            return Result.Failure<PedidoDto>(Error.NotFound("Veiculo.NaoEncontrado", "Veículo não encontrado."));
+        }
+
+        var emUsoPorOutro = await _entregadorRepository.ListAsync(cancellationToken);
+        if (emUsoPorOutro.Any(e => e.Id != entregador.Id && e.VeiculoAtualId == veiculo.Id && e.Status == StatusEntregador.EmEntrega))
+        {
+            return Result.Failure<PedidoDto>(
+                Error.Conflict("Veiculo.EmUso", "Este veículo já está em uso por outro entregador."));
+        }
+
         var result = pedido.IniciarEntrega(entregador.Id);
         if (result.IsFailure)
         {
             return Result.Failure<PedidoDto>(result.Error);
         }
 
+        entregador.AtribuirVeiculo(veiculo.Id);
         entregador.IniciarEntrega();
 
         _pedidoRepository.Update(pedido);

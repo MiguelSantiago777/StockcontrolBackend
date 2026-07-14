@@ -28,6 +28,18 @@ public sealed class EntregadorDto
     [JsonPropertyName("positionUpdatedAt")]
     public DateTime? PositionUpdatedAt { get; set; }
 
+    [JsonPropertyName("vehicleId")]
+    public Guid? VehicleId { get; set; }
+
+    [JsonPropertyName("vehiclePlate")]
+    public string? VehiclePlate { get; set; }
+
+    [JsonPropertyName("vehicleType")]
+    public string? VehicleType { get; set; }
+
+    [JsonPropertyName("vehicleModel")]
+    public string? VehicleModel { get; set; }
+
     [JsonPropertyName("isActive")]
     public bool IsActive { get; set; }
 }

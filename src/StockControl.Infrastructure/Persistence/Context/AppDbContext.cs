@@ -28,6 +28,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
     public DbSet<Entregador> Entregadores => Set<Entregador>();
+    public DbSet<Veiculo> Veiculos => Set<Veiculo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

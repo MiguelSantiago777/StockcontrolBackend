@@ -35,6 +35,7 @@ public sealed class EntregadorConfiguration : IEntityTypeConfiguration<Entregado
         });
 
         builder.Property(e => e.Status).HasConversion<int>();
+        builder.Property(e => e.VeiculoAtualId).HasColumnName("veiculo_atual_id");
         builder.Property(e => e.Version).IsRowVersion();
         builder.HasQueryFilter(e => e.DeletedAt == null);
     }

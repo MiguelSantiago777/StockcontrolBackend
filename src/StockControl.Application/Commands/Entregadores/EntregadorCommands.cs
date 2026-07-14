@@ -134,12 +134,18 @@ public sealed class AtualizarEntregadorCommandValidator : AbstractValidator<Atua
 public sealed class AtualizarEntregadorCommandHandler : IRequestHandler<AtualizarEntregadorCommand, Result<EntregadorDto>>
 {
     private readonly IEntregadorRepository _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
 
-    public AtualizarEntregadorCommandHandler(IEntregadorRepository repository, IUnitOfWork unitOfWork, ICacheService cache)
+    public AtualizarEntregadorCommandHandler(
+        IEntregadorRepository repository,
+        IRepository<Veiculo> veiculoRepository,
+        IUnitOfWork unitOfWork,
+        ICacheService cache)
     {
         _repository = repository;
+        _veiculoRepository = veiculoRepository;
         _unitOfWork = unitOfWork;
         _cache = cache;
     }
@@ -168,7 +174,10 @@ public sealed class AtualizarEntregadorCommandHandler : IRequestHandler<Atualiza
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _cache.RemoveAsync(CacheKeys.Entregadores, cancellationToken);
 
-        return entregador.ToDto();
+        var veiculoAtual = entregador.VeiculoAtualId is { } veiculoId
+            ? await _veiculoRepository.GetByIdAsync(veiculoId, cancellationToken)
+            : null;
+        return entregador.ToDto(veiculoAtual);
     }
 }
 
@@ -197,12 +206,18 @@ public sealed class AtualizarStatusEntregadorCommandValidator : AbstractValidato
 public sealed class AtualizarStatusEntregadorCommandHandler : IRequestHandler<AtualizarStatusEntregadorCommand, Result<EntregadorDto>>
 {
     private readonly IEntregadorRepository _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
 
-    public AtualizarStatusEntregadorCommandHandler(IEntregadorRepository repository, IUnitOfWork unitOfWork, ICacheService cache)
+    public AtualizarStatusEntregadorCommandHandler(
+        IEntregadorRepository repository,
+        IRepository<Veiculo> veiculoRepository,
+        IUnitOfWork unitOfWork,
+        ICacheService cache)
     {
         _repository = repository;
+        _veiculoRepository = veiculoRepository;
         _unitOfWork = unitOfWork;
         _cache = cache;
     }
@@ -226,7 +241,10 @@ public sealed class AtualizarStatusEntregadorCommandHandler : IRequestHandler<At
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _cache.RemoveAsync(CacheKeys.Entregadores, cancellationToken);
 
-        return entregador.ToDto();
+        var veiculoAtual = entregador.VeiculoAtualId is { } veiculoId
+            ? await _veiculoRepository.GetByIdAsync(veiculoId, cancellationToken)
+            : null;
+        return entregador.ToDto(veiculoAtual);
     }
 }
 
@@ -247,12 +265,18 @@ public sealed class AtualizarPosicaoEntregadorCommand : IRequest<Result<Entregad
 public sealed class AtualizarPosicaoEntregadorCommandHandler : IRequestHandler<AtualizarPosicaoEntregadorCommand, Result<EntregadorDto>>
 {
     private readonly IEntregadorRepository _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
 
-    public AtualizarPosicaoEntregadorCommandHandler(IEntregadorRepository repository, IUnitOfWork unitOfWork, ICacheService cache)
+    public AtualizarPosicaoEntregadorCommandHandler(
+        IEntregadorRepository repository,
+        IRepository<Veiculo> veiculoRepository,
+        IUnitOfWork unitOfWork,
+        ICacheService cache)
     {
         _repository = repository;
+        _veiculoRepository = veiculoRepository;
         _unitOfWork = unitOfWork;
         _cache = cache;
     }
@@ -275,7 +299,10 @@ public sealed class AtualizarPosicaoEntregadorCommandHandler : IRequestHandler<A
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _cache.RemoveAsync(CacheKeys.Entregadores, cancellationToken);
 
-        return entregador.ToDto();
+        var veiculoAtual = entregador.VeiculoAtualId is { } veiculoId
+            ? await _veiculoRepository.GetByIdAsync(veiculoId, cancellationToken)
+            : null;
+        return entregador.ToDto(veiculoAtual);
     }
 }
 
@@ -321,7 +348,7 @@ public sealed class ExcluirEntregadorCommandHandler : IRequestHandler<ExcluirEnt
 
 internal static class EntregadorMapping
 {
-    public static EntregadorDto ToDto(this Entregador entregador) => new()
+    public static EntregadorDto ToDto(this Entregador entregador, Veiculo? veiculoAtual = null) => new()
     {
         Id = entregador.Id,
         Name = entregador.Nome,
@@ -333,6 +360,10 @@ internal static class EntregadorMapping
             ? null
             : new CoordenadaDto { Latitude = entregador.UltimaPosicao.Latitude, Longitude = entregador.UltimaPosicao.Longitude },
         PositionUpdatedAt = entregador.PosicaoAtualizadaEm,
+        VehicleId = veiculoAtual?.Id,
+        VehiclePlate = veiculoAtual?.Placa.Value,
+        VehicleType = veiculoAtual?.Tipo.ToString(),
+        VehicleModel = veiculoAtual?.Modelo,
         IsActive = entregador.IsActive
     };
 }
