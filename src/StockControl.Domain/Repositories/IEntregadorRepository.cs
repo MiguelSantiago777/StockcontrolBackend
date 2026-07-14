@@ -9,4 +9,5 @@ public interface IEntregadorRepository : IRepository<Entregador>
     Task<IReadOnlyList<Entregador>> ObterPorStatusAsync(StatusEntregador status, CancellationToken cancellationToken = default);
     Task<bool> CpfExisteAsync(Cpf cpf, Guid? ignorarId = null, CancellationToken cancellationToken = default);
     Task<bool> UsuarioJaVinculadoAsync(Guid usuarioId, Guid? ignorarId = null, CancellationToken cancellationToken = default);
+    Task<Entregador?> ObterPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default);
 }

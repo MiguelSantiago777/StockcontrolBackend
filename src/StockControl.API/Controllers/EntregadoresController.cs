@@ -43,6 +43,16 @@ public sealed class EntregadoresController : ControllerBase
         return result.ToActionResult(this);
     }
 
+    [HttpGet("me")]
+    [Authorize(Policy = Policies.Entregas)]
+    [ProducesResponseType(typeof(EntregadorDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> Meu(CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ObterMeuEntregadorQuery(), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     [HttpGet("{id:guid}")]
     [Authorize(Policy = Policies.Leitura)]
     [ProducesResponseType(typeof(EntregadorDto), StatusCodes.Status200OK)]
@@ -89,9 +99,10 @@ public sealed class EntregadoresController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/position")]
-    [Authorize(Policy = Policies.GerenciaEstoque)]
+    [Authorize(Policy = Policies.Leitura)]
     [ProducesResponseType(typeof(EntregadorDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> AtualizarPosicao(Guid id, [FromBody] AtualizarPosicaoEntregadorCommand command, CancellationToken cancellationToken)
     {

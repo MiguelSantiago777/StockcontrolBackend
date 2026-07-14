@@ -248,7 +248,8 @@ public sealed class AtualizarStatusEntregadorCommandHandler : IRequestHandler<At
     }
 }
 
-// ─── Atualizar posição (dado de exemplo, sem rastreamento ao vivo) ──────────
+// ─── Atualizar posição (Admin/Estoquista define a de qualquer um — dado de
+// exemplo/manual; o próprio Entregador só pode atualizar a sua) ─────────────
 
 public sealed class AtualizarPosicaoEntregadorCommand : IRequest<Result<EntregadorDto>>
 {
@@ -268,17 +269,20 @@ public sealed class AtualizarPosicaoEntregadorCommandHandler : IRequestHandler<A
     private readonly IRepository<Veiculo> _veiculoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
+    private readonly ICurrentUserService _currentUser;
 
     public AtualizarPosicaoEntregadorCommandHandler(
         IEntregadorRepository repository,
         IRepository<Veiculo> veiculoRepository,
         IUnitOfWork unitOfWork,
-        ICacheService cache)
+        ICacheService cache,
+        ICurrentUserService currentUser)
     {
         _repository = repository;
         _veiculoRepository = veiculoRepository;
         _unitOfWork = unitOfWork;
         _cache = cache;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<EntregadorDto>> Handle(AtualizarPosicaoEntregadorCommand request, CancellationToken cancellationToken)
@@ -287,6 +291,13 @@ public sealed class AtualizarPosicaoEntregadorCommandHandler : IRequestHandler<A
         if (entregador is null)
         {
             return Result.Failure<EntregadorDto>(Error.NotFound("Entregador.NaoEncontrado", "Entregador não encontrado."));
+        }
+
+        var podeGerenciarQualquer = _currentUser.Role is "Administrador" or "Estoquista";
+        if (!podeGerenciarQualquer && entregador.UsuarioId != _currentUser.UserId)
+        {
+            return Result.Failure<EntregadorDto>(
+                Error.Forbidden("Entregador.PosicaoNaoPermitida", "Você só pode atualizar sua própria localização."));
         }
 
         var result = entregador.AtualizarPosicao(request.Latitude, request.Longitude);

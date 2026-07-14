@@ -26,5 +26,7 @@ public sealed class CurrentUserService : ICurrentUserService
 
     public string? Email => User?.FindFirstValue(ClaimTypes.Email);
 
+    public string? Role => User?.FindFirstValue(ClaimTypes.Role);
+
     public bool EstaAutenticado => User?.Identity?.IsAuthenticated ?? false;
 }

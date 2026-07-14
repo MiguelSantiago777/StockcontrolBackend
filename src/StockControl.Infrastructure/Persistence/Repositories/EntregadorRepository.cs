@@ -33,4 +33,9 @@ public sealed class EntregadorRepository : Repository<Entregador>, IEntregadorRe
     {
         return await DbSet.AnyAsync(entregador => entregador.UsuarioId == usuarioId && entregador.Id != ignorarId, cancellationToken);
     }
+
+    public async Task<Entregador?> ObterPorUsuarioIdAsync(Guid usuarioId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet.FirstOrDefaultAsync(entregador => entregador.UsuarioId == usuarioId, cancellationToken);
+    }
 }

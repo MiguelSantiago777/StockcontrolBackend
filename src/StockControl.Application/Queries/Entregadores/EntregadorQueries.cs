@@ -116,6 +116,49 @@ public sealed class ObterEntregadorPorIdQueryHandler : IRequestHandler<ObterEntr
     }
 }
 
+// ─── Meu registro de entregador (usuário autenticado com perfil Entregador) ─
+
+public sealed class ObterMeuEntregadorQuery : IRequest<Result<EntregadorDto>>
+{
+}
+
+public sealed class ObterMeuEntregadorQueryHandler : IRequestHandler<ObterMeuEntregadorQuery, Result<EntregadorDto>>
+{
+    private readonly IEntregadorRepository _repository;
+    private readonly IRepository<Veiculo> _veiculoRepository;
+    private readonly ICurrentUserService _currentUser;
+
+    public ObterMeuEntregadorQueryHandler(
+        IEntregadorRepository repository,
+        IRepository<Veiculo> veiculoRepository,
+        ICurrentUserService currentUser)
+    {
+        _repository = repository;
+        _veiculoRepository = veiculoRepository;
+        _currentUser = currentUser;
+    }
+
+    public async Task<Result<EntregadorDto>> Handle(ObterMeuEntregadorQuery request, CancellationToken cancellationToken)
+    {
+        if (_currentUser.UserId is not { } userId)
+        {
+            return Result.Failure<EntregadorDto>(Error.Unauthorized("Auth.NaoAutenticado", "Usuário não autenticado."));
+        }
+
+        var entregador = await _repository.ObterPorUsuarioIdAsync(userId, cancellationToken);
+        if (entregador is null)
+        {
+            return Result.Failure<EntregadorDto>(
+                Error.NotFound("Entregador.NaoEncontrado", "Nenhum entregador vinculado a este usuário."));
+        }
+
+        var veiculoAtual = entregador.VeiculoAtualId is { } veiculoId
+            ? await _veiculoRepository.GetByIdAsync(veiculoId, cancellationToken)
+            : null;
+        return entregador.ToDto(veiculoAtual);
+    }
+}
+
 // ─── Usuários elegíveis (perfil Entregador, ainda não vinculados) ───────────
 
 public sealed class UsuarioElegivelDto
