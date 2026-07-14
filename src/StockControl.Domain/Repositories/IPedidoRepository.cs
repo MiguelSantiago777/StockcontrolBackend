@@ -6,4 +6,5 @@ public interface IPedidoRepository : IRepository<Pedido>
 {
     Task<Pedido?> ObterComItensAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Pedido>> ObterPorClienteAsync(Guid clienteId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Pedido>> ObterTodosComItensAsync(CancellationToken cancellationToken = default);
 }

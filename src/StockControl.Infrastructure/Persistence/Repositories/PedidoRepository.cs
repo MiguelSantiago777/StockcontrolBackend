@@ -30,4 +30,12 @@ public sealed class PedidoRepository : Repository<Pedido>, IPedidoRepository
             .OrderByDescending(pedido => pedido.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Pedido>> ObterTodosComItensAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .Include(pedido => pedido.Itens)
+            .ToListAsync(cancellationToken);
+    }
 }
