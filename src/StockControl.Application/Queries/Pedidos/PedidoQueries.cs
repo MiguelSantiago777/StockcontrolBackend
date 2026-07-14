@@ -1,6 +1,7 @@
 using MediatR;
 using StockControl.Application.Commands.Pedidos;
 using StockControl.Application.DTOs;
+using StockControl.Application.Interfaces;
 using StockControl.Domain.Aggregates;
 using StockControl.Domain.Common;
 using StockControl.Domain.Enums;
@@ -29,23 +30,37 @@ public sealed class ListarPedidosQueryHandler : IRequestHandler<ListarPedidosQue
 {
     private readonly IRepository<Pedido> _pedidoRepository;
     private readonly IRepository<Cliente> _clienteRepository;
-    private readonly IRepository<Entregador> _entregadorRepository;
+    private readonly IEntregadorRepository _entregadorRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public ListarPedidosQueryHandler(
         IRepository<Pedido> pedidoRepository,
         IRepository<Cliente> clienteRepository,
-        IRepository<Entregador> entregadorRepository)
+        IEntregadorRepository entregadorRepository,
+        ICurrentUserService currentUser)
     {
         _pedidoRepository = pedidoRepository;
         _clienteRepository = clienteRepository;
         _entregadorRepository = entregadorRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<PagedResultDto<PedidoDto>>> Handle(
         ListarPedidosQuery request,
         CancellationToken cancellationToken)
     {
-        var spec = new PedidosSpecification(request.Page, request.PageSize, request.Status);
+        var aplicarEscopoEntregador = _currentUser.Role == "Entregador";
+        Guid? entregadorEscopoId = null;
+        if (aplicarEscopoEntregador)
+        {
+            var meuEntregador = _currentUser.UserId is { } usuarioId
+                ? await _entregadorRepository.ObterPorUsuarioIdAsync(usuarioId, cancellationToken)
+                : null;
+            entregadorEscopoId = meuEntregador?.Id ?? Guid.Empty;
+        }
+
+        var spec = new PedidosSpecification(
+            request.Page, request.PageSize, request.Status, aplicarEscopoEntregador, entregadorEscopoId);
         var pedidos = await _pedidoRepository.ListAsync(spec, cancellationToken);
         var totalCount = await _pedidoRepository.CountAsync(spec, cancellationToken);
 
