@@ -101,6 +101,7 @@ Todos os controllers seguem o mesmo formato: `GET` (paginado, `page`/`pageSize`/
 | Recurso | Rota | Policy | Observação |
 |---|---|---|---|
 | Auth | `/auth/*` | — | login, refresh, logout, me, change-password |
+| Dashboard | `/dashboard` | Leitura | `/summary`, `/orders-by-month`, `/stock-movements`, `/top-products` — só leitura, dados agregados |
 | Categorias | `/categories` | Leitura / GerenciaEstoque | |
 | Produtos | `/products` | Leitura / GerenciaEstoque | + `POST /products/{id}/image` |
 | Fornecedores | `/suppliers` | Leitura / GerenciaEstoque | CNPJ único, endereço obrigatório |
